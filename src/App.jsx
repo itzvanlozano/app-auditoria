@@ -851,6 +851,7 @@ function SignaturePad({ value, onChange, height = 150 }) {
 
 /* ---------- Selector de fotos genérico (para Activos y Acciones) ---------- */
 function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
+  const [preview, setPreview] = useState(null); // url de la foto abierta en la vista previa ampliada
   const add = async (files) => {
     const arr = Array.from(files).slice(0, max - (photos || []).length);
     const urls = [];
@@ -866,9 +867,19 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
       {(photos || []).map((ev, i) => (
         <div key={i} style={{ position: "relative" }}>
-          <img src={ev} alt="" style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}` }} />
+          <img
+            src={ev}
+            alt=""
+            onClick={() => setPreview(ev)}
+            title="Ver foto ampliada"
+            style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}`, cursor: "zoom-in" }}
+          />
           {!disabled && (
-            <button onClick={() => remove(i)} style={{ position: "absolute", top: -6, right: -6, background: "#C22B2B", border: "2px solid #fff", color: "#fff", borderRadius: 999, width: 18, height: 18, fontSize: 10, cursor: "pointer" }}>✕</button>
+            <button
+              onClick={(e) => { e.stopPropagation(); remove(i); }}
+              title="Eliminar foto"
+              style={{ position: "absolute", top: -6, right: -6, background: "#C22B2B", border: "2px solid #fff", color: "#fff", borderRadius: 999, width: 18, height: 18, fontSize: 10, lineHeight: 1, cursor: "pointer" }}
+            >✕</button>
           )}
         </div>
       ))}
@@ -877,6 +888,26 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
           <Icon name="camera" size={18} />
           <input type="file" accept="image/*" multiple hidden onChange={(e) => e.target.files.length && add(e.target.files)} />
         </label>
+      )}
+      {preview && (
+        <div
+          onClick={() => setPreview(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.88)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, cursor: "zoom-out" }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setPreview(null); }}
+            title="Cerrar"
+            style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "#fff", display: "flex" }}
+          >
+            <Icon name="x" size={18} />
+          </button>
+          <img
+            src={preview}
+            alt=""
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "94vw", maxHeight: "90vh", borderRadius: 10, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", cursor: "default" }}
+          />
+        </div>
       )}
     </div>
   );
@@ -2835,6 +2866,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState("");
   const [accionDraft, setAccionDraft] = useState(null); // {critId, criterioName, sectionName}
+  const [openNotas, setOpenNotas] = useState({}); // { [critId]: bool|undefined } — toggle manual de Observación/Acción por criterio (undefined = usar el valor por defecto según si ya tiene datos capturados)
 
   const tipo = tipos.find((t) => t.id === audit.tipoAuditoriaId) || null;
   const secciones = tipo?.secciones || [];
@@ -2989,10 +3021,12 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
                           const s = audit.scores[id] || {};
                           const escCrit = getEscala(tipo, c);
                           const puntosDesc = escalaPuntosDesc(escCrit);
+                          const hasNotas = !!(s.observacion || s.accion);
+                          const notasOpen = openNotas[id] !== undefined ? openNotas[id] : hasNotas;
                           return (
-                            <div key={id} style={{ borderTop: `1px solid ${C.line}`, padding: "16px 0" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-                                <div style={{ fontWeight: 700, fontSize: 13.3, color: C.ink }}>{c.name}</div>
+                            <div key={id} style={{ borderTop: `1px solid ${C.line}`, padding: "10px 0" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                                <div style={{ fontWeight: 700, fontSize: 13, color: C.ink }}>{c.name}</div>
                                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                                   <Btn size="sm" variant="ghost" onClick={() => setGuiaCrit(c)}><Icon name="book" size={13} /> Ver guía</Btn>
                                   {!readOnly && (
@@ -3002,27 +3036,36 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
                                   )}
                                 </div>
                               </div>
-                              {(c.guia || c.reactivo) && <div style={{ fontSize: 11.5, color: C.slate, background: C.sky, borderRadius: 8, padding: "6px 10px", marginBottom: 10 }}>{c.guia || c.reactivo}</div>}
-                              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-                                {puntosDesc.map((p) => (
-                                  <button
-                                    key={p.valor}
-                                    disabled={readOnly}
-                                    onClick={() => setScore(id, { calificacion: p.valor })}
-                                    title={p.descripcion || p.etiqueta}
-                                    style={{
-                                      minWidth: 40, height: 36, padding: "0 10px", borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: readOnly ? "default" : "pointer",
-                                      border: `1.5px solid ${s.calificacion === p.valor ? p.color : C.line}`,
-                                      background: s.calificacion === p.valor ? p.color : "#fff",
-                                      color: s.calificacion === p.valor ? "#fff" : C.slate,
-                                    }}
-                                  >{p.etiqueta}</button>
-                                ))}
+                              {(c.guia || c.reactivo) && <div style={{ fontSize: 11, color: C.slate, background: C.sky, borderRadius: 8, padding: "5px 9px", marginBottom: 6 }}>{c.guia || c.reactivo}</div>}
+                              <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: 8 }}>
+                                <div style={{ display: "flex", gap: 5, flexWrap: "nowrap", justifyContent: "center", minWidth: "min-content", margin: "0 auto" }}>
+                                  {puntosDesc.map((p) => (
+                                    <button
+                                      key={p.valor}
+                                      disabled={readOnly}
+                                      onClick={() => setScore(id, { calificacion: p.valor })}
+                                      title={p.descripcion || p.etiqueta}
+                                      style={{
+                                        minWidth: 34, height: 32, padding: "0 8px", borderRadius: 8, fontSize: 12.5, fontWeight: 800, cursor: readOnly ? "default" : "pointer", flexShrink: 0,
+                                        border: `1.5px solid ${s.calificacion === p.valor ? p.color : C.line}`,
+                                        background: s.calificacion === p.valor ? p.color : "#fff",
+                                        color: s.calificacion === p.valor ? "#fff" : C.slate,
+                                      }}
+                                    >{p.etiqueta}</button>
+                                  ))}
+                                </div>
                               </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 10 }}>
-                                <Field label="Observación"><TextArea disabled={readOnly} value={s.observacion || ""} onChange={(e) => setScore(id, { observacion: e.target.value })} placeholder="¿Qué se observó?" /></Field>
-                                <Field label="Acción"><TextArea disabled={readOnly} value={s.accion || ""} onChange={(e) => setScore(id, { accion: e.target.value })} placeholder="Acción correctiva a tomar" /></Field>
+                              <div style={{ display: "flex", justifyContent: "center", marginBottom: notasOpen ? 8 : 2 }}>
+                                <Btn size="sm" variant={notasOpen ? "subtle" : "ghost"} onClick={() => setOpenNotas((prev) => ({ ...prev, [id]: !notasOpen }))}>
+                                  ✍️ {notasOpen ? "Ocultar observación / comentario" : "Agregar observación / comentario"}{hasNotas && !notasOpen ? " (con datos)" : ""}
+                                </Btn>
                               </div>
+                              {notasOpen && (
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 8 }}>
+                                  <Field label="Observación"><TextArea disabled={readOnly} value={s.observacion || ""} onChange={(e) => setScore(id, { observacion: e.target.value })} placeholder="¿Qué se observó?" /></Field>
+                                  <Field label="Acción"><TextArea disabled={readOnly} value={s.accion || ""} onChange={(e) => setScore(id, { accion: e.target.value })} placeholder="Acción correctiva a tomar" /></Field>
+                                </div>
+                              )}
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "start" }}>
                                 <Field label="Fecha compromiso"><DateField disabled={readOnly} value={s.fechaCompromiso || ""} onChange={(v) => setScore(id, { fechaCompromiso: v })} /></Field>
                                 <Field label={`Evidencias fotográficas (${(s.evidencias || []).length}/3)`}>
