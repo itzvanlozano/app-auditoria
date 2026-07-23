@@ -851,7 +851,7 @@ function SignaturePad({ value, onChange, height = 150 }) {
 
 /* ---------- Selector de fotos genérico (para Activos y Acciones) ---------- */
 function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
-  const [preview, setPreview] = useState(null); // url de la foto abierta en la vista previa ampliada
+  const [previewIdx, setPreviewIdx] = useState(null); // índice de la foto abierta en la vista previa ampliada (no la URL, para poder borrarla desde ahí)
   const add = async (files) => {
     const arr = Array.from(files).slice(0, max - (photos || []).length);
     const urls = [];
@@ -863,6 +863,7 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
     onChange([...(photos || []), ...urls]);
   };
   const remove = (i) => onChange((photos || []).filter((_, idx) => idx !== i));
+  const previewSrc = previewIdx != null ? (photos || [])[previewIdx] : null;
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
       {(photos || []).map((ev, i) => (
@@ -870,7 +871,7 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
           <img
             src={ev}
             alt=""
-            onClick={() => setPreview(ev)}
+            onClick={() => setPreviewIdx(i)}
             title="Ver foto ampliada"
             style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}`, cursor: "zoom-in" }}
           />
@@ -889,24 +890,48 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
           <input type="file" accept="image/*" multiple hidden onChange={(e) => e.target.files.length && add(e.target.files)} />
         </label>
       )}
-      {preview && (
+      {previewSrc && (
+        // Fondo del visor: un clic aquí SOLO cierra (no borra nada). El panel interior detiene la
+        // propagación del clic para que ningún control de dentro (cerrar, conservar, eliminar)
+        // pueda "burbujear" y disparar acciones de otros componentes por accidente.
         <div
-          onClick={() => setPreview(null)}
-          style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.88)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, cursor: "zoom-out" }}
+          onClick={() => setPreviewIdx(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.88)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
         >
-          <button
-            onClick={(e) => { e.stopPropagation(); setPreview(null); }}
-            title="Cerrar"
-            style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: 8, cursor: "pointer", color: "#fff", display: "flex" }}
-          >
-            <Icon name="x" size={18} />
-          </button>
-          <img
-            src={preview}
-            alt=""
+          <div
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "94vw", maxHeight: "90vh", borderRadius: 10, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", cursor: "default" }}
-          />
+            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "94vw" }}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); setPreviewIdx(null); }}
+              title="Cerrar (conserva la foto)"
+              style={{ position: "absolute", top: -16, right: -16, background: C.navy, border: "2px solid #fff", borderRadius: 999, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", cursor: "pointer", zIndex: 1 }}
+            >
+              <Icon name="x" size={16} />
+            </button>
+            <img
+              src={previewSrc}
+              alt=""
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: "94vw", maxHeight: "74vh", borderRadius: 10, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", display: "block", cursor: "default" }}
+            />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 16 }}>
+              <Btn
+                variant="subtle"
+                onClick={(e) => { e.stopPropagation(); setPreviewIdx(null); }}
+              >
+                <Icon name="check" size={14} /> Aceptar / Conservar foto
+              </Btn>
+              {!disabled && (
+                <Btn
+                  variant="danger"
+                  onClick={(e) => { e.stopPropagation(); remove(previewIdx); setPreviewIdx(null); }}
+                >
+                  <Icon name="trash" size={14} /> Eliminar foto
+                </Btn>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
