@@ -1011,14 +1011,14 @@ function Sidebar({ view, setView, user, onLogout, config }) {
         puede(user, "verConfig") && { id: "config", label: "Configuración", icon: "settings" },
       ].filter(Boolean);
   return (
-    <div style={{ width: 234, background: C.navyDeep, color: "#fff", display: "flex", flexDirection: "column", flexShrink: 0, minHeight: "100vh" }}>
+    <div className="app-sidebar" style={{ width: 234, background: C.navyDeep, color: "#fff", display: "flex", flexDirection: "column", flexShrink: 0, minHeight: "100vh" }}>
       <div style={{ padding: "22px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ width: 34, height: 34, borderRadius: 9, background: C.royalLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Icon name="building" size={17} color="#fff" />
         </div>
         <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>{config?.empresa || "Auditoría Integral"}</div>
       </div>
-      <div style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
+      <div className="app-sidebar-nav" style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
         {items.map((it) => (
           <button
             key={it.id}
@@ -1232,9 +1232,9 @@ function ReporteAuditoriaViewerModal({ audit, tipo, config, onClose, onPrintReal
   const iframeRef = useRef(null);
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.55)", zIndex: 400, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", background: C.navy, color: "#fff", flexShrink: 0 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", background: C.navy, color: "#fff", flexShrink: 0 }}>
         <div style={{ fontWeight: 750, fontSize: 14 }}>{audit.folio} · Visor de reporte</div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Btn size="sm" onClick={() => { onPrintReal ? onPrintReal() : iframeRef.current?.contentWindow?.print(); }}><Icon name="download" size={14} /> Imprimir / Guardar PDF</Btn>
           <Btn size="sm" variant="ghost" style={{ color: "#fff" }} onClick={onClose}><Icon name="x" size={14} /> Cerrar</Btn>
         </div>
@@ -1352,8 +1352,8 @@ function ScorecardSection({ index, tiposAuditoria, sucursales }) {
         <EmptyState text="No hay sucursales para mostrar." />
       ) : (
         <>
-          <div style={{ overflowX: "auto", marginBottom: 20 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: 20 }}>
+            <table style={{ width: "100%", minWidth: 600, borderCollapse: "collapse", fontSize: 12.5 }}>
               <thead>
                 <tr>
                   <th style={{ ...th, background: C.navy, color: "#fff", textAlign: "left", borderRadius: "8px 0 0 0" }}>Criterio \ Sucursal</th>
@@ -1459,7 +1459,7 @@ function AjustesInventarioModal({ sucursales, user, onSave, onClose }) {
 
   return (
     <Modal title="Registrar ajustes de inventario del mes" onClose={onClose} width={760}>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 12, marginBottom: 6 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 6 }}>
         <Field label="Sucursal" required>
           <Select value={sucursal} onChange={(e) => setSucursal(e.target.value)}>
             {sucursales.map((s) => <option key={s.id} value={s.nombre}>{s.nombre}</option>)}
@@ -1480,7 +1480,7 @@ function AjustesInventarioModal({ sucursales, user, onSave, onClose }) {
         {ajustes.map((a, i) => (
           <div key={i} style={{ border: `1px solid ${C.line}`, borderRadius: 10, padding: 10, background: C.sky }}>
             <div style={{ fontSize: 11.5, fontWeight: 800, color: C.navy, marginBottom: 8 }}>Inventario {i + 1}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
               <Field label="Folio ajuste de salida"><Input value={a.folioSalida} onChange={(e) => updateAjuste(i, { folioSalida: e.target.value })} /></Field>
               <Field label="Monto de salida"><Input type="number" value={a.montoSalida} onChange={(e) => updateAjuste(i, { montoSalida: e.target.value })} /></Field>
               <Field label="Folio ajuste de entrada"><Input value={a.folioEntrada} onChange={(e) => updateAjuste(i, { folioEntrada: e.target.value })} /></Field>
@@ -1496,7 +1496,7 @@ function AjustesInventarioModal({ sucursales, user, onSave, onClose }) {
         <div style={{ fontSize: 12.5 }}>Saldo neto: <b style={{ color: balance < 0 ? "#C22B2B" : C.navy }}>{formatMoney(balance)}</b></div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", marginTop: 10 }}>
         <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
         <Btn onClick={guardar}>Guardar ajustes</Btn>
       </div>
@@ -1569,8 +1569,8 @@ function InventarioBalanceSection({ index, ajustesInventario, sucursales, user, 
         </div>
       </div>
 
-      <div style={{ overflowX: "auto", marginBottom: 22 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11.8 }}>
+      <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: 22 }}>
+        <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 11.8 }}>
           <thead>
             <tr>
               <th style={{ ...th, background: C.navy, color: "#fff", textAlign: "left", position: "sticky", left: 0 }}>Sucursal · {anio}</th>
@@ -1735,8 +1735,8 @@ function Dashboard({ index, acciones, activos, tiposAuditoria, sucursales, confi
         {recent.length === 0 ? (
           <EmptyState text="Aún no hay auditorías registradas. Crea la primera desde “Nueva auditoría”." />
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.8 }}>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 12.8 }}>
               <thead>
                 <tr style={{ textAlign: "left", color: C.slate, fontSize: 11 }}>
                   <th style={th}>Folio</th><th style={th}>Tipo</th><th style={th}>Sucursal</th><th style={th}>Fecha</th><th style={th}>Auditor</th><th style={th}>Calificación</th><th style={th}>Estatus</th>
@@ -1768,9 +1768,9 @@ function Dashboard({ index, acciones, activos, tiposAuditoria, sucursales, confi
   if (preview) {
     return (
       <div style={{ position: "fixed", inset: 0, background: "#dfe3ee", zIndex: 400, overflow: "auto" }}>
-        <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", background: C.navy, color: "#fff" }}>
+        <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 5, display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", background: C.navy, color: "#fff" }}>
           <div style={{ fontWeight: 750, fontSize: 14 }}>Vista previa del reporte de Dashboard</div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Btn size="sm" onClick={() => window.print()}><Icon name="download" size={14} /> Imprimir / Guardar PDF</Btn>
             <Btn size="sm" variant="ghost" style={{ color: "#fff" }} onClick={() => setPreview(false)}><Icon name="x" size={14} /> Cerrar vista previa</Btn>
           </div>
@@ -1786,7 +1786,7 @@ function Dashboard({ index, acciones, activos, tiposAuditoria, sucursales, confi
         title={`Hola, ${user.name.split(" ")[0]}`}
         subtitle="Resumen general de auditorías, activos y acciones."
         right={
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Btn variant="outline" onClick={() => setPreview(true)}><Icon name="eye" size={15} /> Vista previa</Btn>
             <Btn onClick={() => window.print()}><Icon name="download" size={15} /> Imprimir reporte</Btn>
           </div>
@@ -1871,8 +1871,8 @@ function Historial({ index, sucursales, tiposAuditoria, openAudit, editAudit, pr
         {filtered.length === 0 ? (
           <div style={{ padding: 20 }}><EmptyState text="No se encontraron auditorías con esos filtros." /></div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.6 }}>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 12.6 }}>
               <thead>
                 <tr style={{ textAlign: "left", background: C.sky, color: C.navy }}>
                   {["Folio", "Tipo", "Fecha", "Sucursal", "Responsable", "Auditor", "Calificación", "% Cumpl.", "Nivel", "Balance", "Estatus", "Acciones"].map((h) => (
@@ -1928,7 +1928,8 @@ function CrudTable({ title, subtitle, items, columns, onSave, onDelete, emptyTex
       <PageHeader title={title} subtitle={subtitle} right={canEdit && <Btn onClick={openNew}><Icon name="plus" size={15} /> Agregar</Btn>} />
       <Card style={{ padding: 0, overflow: "hidden" }}>
         {items.length === 0 ? <div style={{ padding: 20 }}><EmptyState text={emptyText} /></div> : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", minWidth: 480, borderCollapse: "collapse", fontSize: 13 }}>
             <thead><tr style={{ background: C.sky, color: C.navy, textAlign: "left" }}>{columns.map((c) => <th key={c.key} style={th}>{c.label}</th>)}<th style={th}></th></tr></thead>
             <tbody>
               {items.map((it) => (
@@ -1942,6 +1943,7 @@ function CrudTable({ title, subtitle, items, columns, onSave, onDelete, emptyTex
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
       {modal && (
@@ -1957,7 +1959,7 @@ function CrudTable({ title, subtitle, items, columns, onSave, onDelete, emptyTex
               )}
             </Field>
           ))}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", marginTop: 6 }}>
             <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
             <Btn onClick={save}>Guardar</Btn>
           </div>
@@ -2122,7 +2124,7 @@ function AccionFormModal({ initial, sucursales, users, activos, user, origenFijo
       {contextInfo && <div style={{ background: C.sky, border: `1px solid ${C.line}`, borderRadius: 10, padding: 10, fontSize: 12, color: C.navy, marginBottom: 14 }}>{contextInfo}</div>}
       <Field label="Título" required><Input value={form.titulo} onChange={(e) => set("titulo", e.target.value)} placeholder="Resumen breve del hallazgo o pendiente" /></Field>
       <Field label="Descripción detallada" required><TextArea rows={3} value={form.descripcion} onChange={(e) => set("descripcion", e.target.value)} /></Field>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         <Field label="Responsable (asignado a)" required>
           <Input list="acc-users" value={form.asignadoA} onChange={(e) => set("asignadoA", e.target.value)} placeholder="Nombre del responsable" />
           <datalist id="acc-users">{users.map((u) => <option key={u.id} value={u.name} />)}</datalist>
@@ -2147,7 +2149,7 @@ function AccionFormModal({ initial, sucursales, users, activos, user, origenFijo
         </Field>
       </div>
       <Field label="Evidencias fotográficas"><PhotoPicker photos={form.evidencias} onChange={(v) => set("evidencias", v)} /></Field>
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", marginTop: 6 }}>
         <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
         <Btn disabled={!valido} onClick={submit}>Guardar acción</Btn>
       </div>
@@ -2197,7 +2199,7 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
         {tiempo === "proxima" && <span style={{ fontSize: 11, fontWeight: 800, color: "#9A6A00" }}>Vence en {dias} días</span>}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 12.5, marginBottom: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, fontSize: 12.5, marginBottom: 14 }}>
         <div><b>Responsable:</b> {local.asignadoA}</div>
         <div><b>Lugar:</b> {local.lugar}</div>
         <div><b>Fecha compromiso:</b> {local.fechaCompromiso}</div>
@@ -2248,7 +2250,7 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
         ))}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", marginTop: 18, gap: 8 }}>
         <div>{canDelete && <Btn variant="danger" size="sm" onClick={() => onDelete(local.id)}><Icon name="trash" size={13} /> Eliminar</Btn>}</div>
         <Btn variant="ghost" onClick={onClose}>Cerrar ventana</Btn>
       </div>
@@ -2353,8 +2355,8 @@ function AccionesScreen({ acciones, sucursales, users, activos, tiposAuditoria, 
         {filtered.length === 0 ? (
           <div style={{ padding: 20 }}><EmptyState text="No hay acciones que coincidan." /></div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.6 }}>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 12.6 }}>
               <thead>
                 <tr style={{ textAlign: "left", background: C.sky, color: C.navy }}>
                   {["Acción", "Responsable", "Lugar", "Activo", "Prioridad", "Fecha compromiso", "Días restantes", "Estado", "Origen", "Creado por"].map((h) => (
@@ -2435,8 +2437,8 @@ function ActivosScreen({ activos, sucursales, acciones, user, onSave, onDelete }
         {activos.length === 0 ? (
           <div style={{ padding: 20 }}><EmptyState text="No hay activos registrados todavía." /></div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.8 }}>
+          <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 12.8 }}>
               <thead>
                 <tr style={{ textAlign: "left", background: C.sky, color: C.navy }}>
                   {["Foto", "Tipo", "Nombre", "N° económico", "Ubicación", "Responsable", "Estado", ""].map((h) => <th key={h} style={th}>{h}</th>)}
@@ -2467,7 +2469,7 @@ function ActivosScreen({ activos, sucursales, acciones, user, onSave, onDelete }
 
       {modal && (
         <Modal title={modal.mode === "new" ? "Registrar activo" : "Editar activo"} onClose={() => setModal(null)} width={620}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             <Field label="Tipo de activo" required>
               <Select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>{TIPOS_ACTIVO.map((t) => <option key={t}>{t}</option>)}</Select>
             </Field>
@@ -2487,7 +2489,7 @@ function ActivosScreen({ activos, sucursales, acciones, user, onSave, onDelete }
           <Field label="Descripción"><TextArea rows={2} value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} /></Field>
           <Field label="Fotografías"><PhotoPicker photos={form.fotos} onChange={(v) => setForm({ ...form, fotos: v })} /></Field>
           <Field label="Observaciones"><TextArea rows={2} value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} /></Field>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", marginTop: 6 }}>
             <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
             <Btn onClick={save}>Guardar</Btn>
           </div>
@@ -2629,7 +2631,7 @@ function TemplateEditor({ secciones, tipoEscala, onChange }) {
                   </div>
                   <div style={{ fontSize: 10.5, color: C.slate, marginBottom: 6 }}>Criterio con escala clásica del sistema (0–5, reactivo + 5 niveles fijos).</div>
                   <Field label="Reactivo / defectuoso base (nivel 0)"><TextArea rows={1} value={c.reactivo} onChange={(e) => updateCriterio(idx, cIdx, { reactivo: e.target.value })} /></Field>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
                     {[0, 1, 2, 3, 4].map((nIdx) => (
                       <Field key={nIdx} label={`Nivel ${nIdx + 1}`}><TextArea rows={1} value={c.niveles[nIdx] || ""} onChange={(e) => updateNivel(idx, cIdx, nIdx, e.target.value)} /></Field>
                     ))}
@@ -2686,7 +2688,8 @@ function TiposAuditoriaScreen({ tipos, onSave, onDelete, readOnly }) {
     <div>
       <PageHeader title="Tipos de auditoría" subtitle="Catálogo dinámico de plantillas — agrega nuevos tipos sin modificar el código." right={!readOnly && <Btn onClick={openNew}><Icon name="plus" size={15} /> Nuevo tipo de auditoría</Btn>} />
       <Card style={{ padding: 0, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <div style={{ width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", minWidth: 600, borderCollapse: "collapse", fontSize: 13 }}>
           <thead><tr style={{ background: C.sky, color: C.navy, textAlign: "left" }}><th style={th}>Nombre</th><th style={th}>Secciones</th><th style={th}>Criterios</th><th style={th}>Estatus</th><th style={th}></th></tr></thead>
           <tbody>
             {tipos.map((t) => (
@@ -2703,11 +2706,12 @@ function TiposAuditoriaScreen({ tipos, onSave, onDelete, readOnly }) {
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
 
       {modal && (
         <Modal title={modal.mode === "new" ? "Nuevo tipo de auditoría" : `Editar · ${form.nombre}`} onClose={() => setModal(null)} width={820}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
             <Field label="Nombre" required><Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} /></Field>
             <Field label="Estatus">
               <Select value={form.activo ? "1" : "0"} onChange={(e) => setForm({ ...form, activo: e.target.value === "1" })}>
@@ -2734,7 +2738,7 @@ function TiposAuditoriaScreen({ tipos, onSave, onDelete, readOnly }) {
           )}
           <TemplateEditor secciones={form.secciones} tipoEscala={form.escala} onChange={(secciones) => setForm({ ...form, secciones })} />
 
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end", marginTop: 16 }}>
             <Btn variant="ghost" onClick={() => setModal(null)}>Cancelar</Btn>
             <Btn onClick={save}>Guardar tipo de auditoría</Btn>
           </div>
@@ -2809,7 +2813,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
         title={`${audit.folio} · ${audit.estatus}`}
         subtitle={readOnly ? "Auditoría finalizada — solo lectura para tu rol." : "Captura por bloques: completa cada paso y guarda cuando quieras."}
         right={
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Btn variant="ghost" onClick={onCancel}><Icon name="arrowLeft" size={15} /> Volver</Btn>
             <Btn variant="outline" onClick={() => onPrint(audit)}><Icon name="download" size={15} /> Descargar PDF</Btn>
           </div>
@@ -2835,7 +2839,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
 
       {stepKey === "datos" && (
         <Card style={{ padding: 22, maxWidth: 640 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
             <Field label="Folio"><Input value={audit.folio} disabled style={{ background: C.sky, fontWeight: 700 }} /></Field>
             <Field label="Tipo de auditoría" required>
               <Select value={audit.tipoAuditoriaId} disabled={readOnly} onChange={(e) => setField("tipoAuditoriaId", e.target.value)}>
@@ -2879,7 +2883,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
                 const open = openAcc === sec.id;
                 return (
                   <Card key={sec.id} style={{ marginBottom: 12, overflow: "hidden" }}>
-                    <button onClick={() => setOpenAcc(open ? null : sec.id)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: C.sky, border: "none", cursor: "pointer" }}>
+                    <button onClick={() => setOpenAcc(open ? null : sec.id)} style={{ width: "100%", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: C.sky, border: "none", cursor: "pointer", gap: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ fontWeight: 800, color: C.navy, fontSize: 14 }}>{sec.name}</div>
                         <span style={{ fontSize: 11, color: C.slate }}>{evaluados}/{sec.criteria.length} evaluados</span>
@@ -2900,7 +2904,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
                             <div key={id} style={{ borderTop: `1px solid ${C.line}`, padding: "16px 0" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
                                 <div style={{ fontWeight: 700, fontSize: 13.3, color: C.ink }}>{c.name}</div>
-                                <div style={{ display: "flex", gap: 6 }}>
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                                   <Btn size="sm" variant="ghost" onClick={() => setGuiaCrit(c)}><Icon name="book" size={13} /> Ver guía</Btn>
                                   {!readOnly && (
                                     <Btn size="sm" variant="outline" onClick={() => setAccionDraft({ critId: id, criterioName: c.name, sectionName: sec.name })}>
@@ -2926,11 +2930,11 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
                                   >{p.etiqueta}</button>
                                 ))}
                               </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 10 }}>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 10 }}>
                                 <Field label="Observación"><TextArea disabled={readOnly} value={s.observacion || ""} onChange={(e) => setScore(id, { observacion: e.target.value })} placeholder="¿Qué se observó?" /></Field>
                                 <Field label="Acción"><TextArea disabled={readOnly} value={s.accion || ""} onChange={(e) => setScore(id, { accion: e.target.value })} placeholder="Acción correctiva a tomar" /></Field>
                               </div>
-                              <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 12, alignItems: "start" }}>
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "start" }}>
                                 <Field label="Fecha compromiso"><DateField disabled={readOnly} value={s.fechaCompromiso || ""} onChange={(v) => setScore(id, { fechaCompromiso: v })} /></Field>
                                 <Field label={`Evidencias fotográficas (${(s.evidencias || []).length}/3)`}>
                                   <PhotoPicker photos={s.evidencias} max={3} onChange={(fotos) => setScore(id, { evidencias: fotos })} disabled={readOnly} />
@@ -2952,7 +2956,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
       {stepKey === "inventario" && (
         <Card style={{ padding: 22, maxWidth: 700 }}>
           <div style={{ fontWeight: 800, color: C.navy, fontSize: 14.5, marginBottom: 14 }}>Resultado de inventario</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18 }}>
             <div>
               <div style={{ fontSize: 12, fontWeight: 800, color: C.royal, marginBottom: 8, textTransform: "uppercase" }}>Ajuste de entrada</div>
               <Field label="Número de ajuste de entrada"><Input disabled={readOnly} value={audit.inventario.entradaNumero} onChange={(e) => setField("inventario", { ...audit.inventario, entradaNumero: e.target.value })} /></Field>
@@ -2975,7 +2979,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
       {stepKey === "comentarios" && (
         <Card style={{ padding: 22, maxWidth: 780 }}>
           <Field label="Comentarios generales"><TextArea disabled={readOnly} rows={4} value={audit.comentarios} onChange={(e) => setField("comentarios", e.target.value)} placeholder="Observaciones generales de la auditoría…" /></Field>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, marginTop: 16 }}>
             <div>
               <Field label="Nombre del encargado" required><Input disabled={readOnly} value={audit.encargadoNombre} onChange={(e) => setField("encargadoNombre", e.target.value)} /></Field>
               <div style={{ fontSize: 12.5, fontWeight: 700, color: C.navy, marginBottom: 5 }}>Firma del encargado <span style={{ color: "#C22B2B" }}>*</span></div>
@@ -3519,7 +3523,7 @@ if (savedSession) {
   const isResp = user.role === "Responsable";
 
   return (
-    <div style={{ display: "flex", fontFamily: "'Segoe UI', system-ui, sans-serif", background: "#F7F8FC", minHeight: "100vh" }}>
+    <div className="app-shell" style={{ display: "flex", fontFamily: "'Segoe UI', system-ui, sans-serif", background: "#F7F8FC", minHeight: "100vh" }}>
       <style>{`
         @media print {
           body * { visibility: hidden; }
@@ -3528,13 +3532,24 @@ if (savedSession) {
         }
         * { box-sizing: border-box; }
         table { font-family: inherit; }
+
+        /* ---- Responsividad móvil (Sidebar + Content) ---- */
+        @media (max-width: 860px) {
+          .app-shell { flex-direction: column !important; }
+          .app-sidebar { width: 100% !important; min-height: auto !important; }
+          .app-sidebar-nav { flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important; }
+          .app-content { width: 100% !important; padding: 16px !important; }
+        }
+        @media (max-width: 480px) {
+          .app-content { padding: 12px !important; }
+        }
       `}</style>
 
       <div className="no-print" style={{ display: printAudit ? "none" : "flex" }}>
         <Sidebar view={view} setView={(v) => { setView(v); setWizardState(null); }} user={user} onLogout={logout} config={config} />
       </div>
 
-      <div style={{ flex: 1, padding: "26px 30px", display: printAudit ? "none" : "block", minWidth: 0 }}>
+      <div className="app-content" style={{ flex: 1, padding: "26px 30px", display: printAudit ? "none" : "block", minWidth: 0 }}>
         {view === "dashboard" && puede(user, "verDashboard") && <Dashboard index={index} acciones={acciones} activos={activos} tiposAuditoria={tiposAuditoria} sucursales={sucursales} config={config} setView={setView} startNueva={startNueva} user={user} ajustesInventario={ajustesInventario} onRegistrarAjuste={registrarAjusteInventario} />}
         {view === "historial" && puede(user, "verHistorial") && <Historial index={index} sucursales={sucursales} tiposAuditoria={tiposAuditoria} openAudit={openAudit} editAudit={editAudit} printAudit={printAuditById} verReporte={verReporteById} deleteAudit={deleteAudit} user={user} />}
         {view === "guia" && puede(user, "verGuia") && <GuiaScreen tiposAuditoria={tiposAuditoria} />}
@@ -3593,7 +3608,7 @@ if (savedSession) {
 
       {printAudit && (
         <div>
-          <div className="no-print" style={{ position: "fixed", top: 12, right: 12, zIndex: 300, display: "flex", gap: 8 }}>
+          <div className="no-print" style={{ position: "fixed", top: 12, right: 12, zIndex: 300, display: "flex", gap: 8, flexWrap: "wrap" }}>
             <Btn onClick={() => window.print()}><Icon name="download" size={15} /> Imprimir / Guardar PDF</Btn>
             <Btn variant="ghost" onClick={() => setPrintAudit(null)}><Icon name="x" size={15} /> Cerrar</Btn>
           </div>
