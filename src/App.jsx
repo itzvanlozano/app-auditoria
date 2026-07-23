@@ -3289,11 +3289,18 @@ export default function App() {
       if (!ajustes) ajustes = [];
       setAjustesInventario(ajustes);
 
-      const session = await sGet("session", false);
-      if (session?.userId) {
-        const found = (u || []).find((x) => x.id === session.userId);
-        if (found) setUser(found);
-      }
+      const savedSession = localStorage.getItem("app_session");
+if (savedSession) {
+  try {
+    const session = JSON.parse(savedSession);
+    if (session?.userId) {
+      const found = (u || []).find((x) => x.id === session.userId);
+      if (found) setUser(found);
+    }
+  } catch (e) {
+    console.error("Error al leer sesión local:", e);
+  }
+}
       setLoading(false);
     })();
   }, []);
@@ -3310,14 +3317,14 @@ export default function App() {
   }, [user]);
 
   const login = async (u) => {
-    setUser(u);
-    await sSet("session", { userId: u.id }, false);
-  };
+  setUser(u);
+  localStorage.setItem("app_session", JSON.stringify({ userId: u.id }));
+};
   const logout = async () => {
-    setUser(null);
-    await sSet("session", {}, false);
-    setView("dashboard");
-  };
+  setUser(null);
+  localStorage.removeItem("app_session");
+  setView("dashboard");
+};
 
   /* ---------- Auditorías ---------- */
   const persistIndexEntry = async (audit, calc, tipo) => {
