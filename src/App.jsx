@@ -388,7 +388,23 @@ async function sSet(key, value, shared = true) {
     return false;
   }
 }
+async function sDel(key, shared = true) {
+  try {
+    const { error } = await supabase
+      .from('app_kv')
+      .delete()
+      .eq('key', key);
 
+    if (error) {
+      console.error("sDel error", key, error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("sDel catch error", key, e);
+    return false;
+  }
+}
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
 function todayISO() {
@@ -3356,15 +3372,15 @@ if (savedSession) {
     await sSet(`audit:${audit.id}`, audit);
     await persistIndexEntry(audit, calc, tipo);
   };
-  const deleteAudit = async (id) => {
-    if (!confirm("¿Eliminar esta auditoría de forma permanente?")) return;
-    await window.storage.delete(`audit:${id}`, true).catch(() => {});
-    setIndex((prev) => {
-      const next = prev.filter((a) => a.id !== id);
-      sSet("audit-index", next);
-      return next;
-    });
-  };
+ const deleteAudit = async (id) => {
+  if (!confirm("¿Eliminar esta auditoría de forma permanente?")) return;
+  await sDel(`audit:${id}`);
+  setIndex((prev) => {
+    const next = prev.filter((a) => a.id !== id);
+    sSet("audit-index", next);
+    return next;
+  });
+};
 
   const startNueva = () => {
     const seq = index.length + 1;
