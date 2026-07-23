@@ -1,3 +1,4 @@
+import { supabase } from './supabaseClient';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ReactDOMServer from "react-dom/server";
 import {
@@ -351,17 +352,36 @@ function esSoloLectura(user) {
 }
 
 /* ---------- Storage helpers ---------- */
+/* --------- Storage helpers (Supabase) --------- */
 async function sGet(key, shared = true) {
   try {
-    const r = await window.storage.get(key, shared);
-    return r ? JSON.parse(r.value) : null;
+    const { data, error } = await supabase
+      .from('app_kv')
+      .select('value')
+      .eq('key', key)
+      .maybeSingle();
+
+    if (error) {
+      console.error("sGet error:", key, error);
+      return null;
+    }
+    return data ? data.value : null;
   } catch (e) {
+    console.error("sGet catch error:", key, e);
     return null;
   }
 }
+
 async function sSet(key, value, shared = true) {
   try {
-    await window.storage.set(key, JSON.stringify(value), shared);
+    const { error } = await supabase
+      .from('app_kv')
+      .upsert({ key: key, value: value }, { onConflict: 'key' });
+
+    if (error) {
+      console.error("storage set error", key, error);
+      return false;
+    }
     return true;
   } catch (e) {
     console.error("storage set error", key, e);
