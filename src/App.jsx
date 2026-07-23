@@ -425,6 +425,14 @@ function accionEstadoTiempo(accion) {
   if (d <= 3) return "proxima";
   return "normal";
 }
+/* Lista de responsables asignados a una acción. Soporta el nuevo arreglo "asignadosA" (múltiples
+   responsables) y, por compatibilidad, las acciones antiguas que sólo tenían "asignadoA" (un solo nombre). */
+function asignadosDe(accion) {
+  if (!accion) return [];
+  if (Array.isArray(accion.asignadosA) && accion.asignadosA.length) return accion.asignadosA;
+  if (accion.asignadoA) return [accion.asignadoA];
+  return [];
+}
 
 function resizeImageFile(file, maxW = 640, quality = 0.55) {
   return new Promise((resolve, reject) => {
@@ -483,6 +491,7 @@ const Icon = ({ name, size = 18, color = "currentColor" }) => {
     flag: <><path d="M4 22V4" /><path d="M4 4h14l-2 4 2 4H4" /></>,
     alert: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></>,
     layers: <><path d="m12 2 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5" /><path d="m3 17 9 5 9-5" /></>,
+    menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   };
   return <svg {...p}>{paths[name] || null}</svg>;
 };
@@ -950,9 +959,16 @@ function Login({ onLogin, users }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(160deg, ${C.navyDeep}, ${C.royal})`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif", padding: 16 }}>
-      <div style={{ width: "100%", maxWidth: 900, display: "flex", borderRadius: 20, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
-        <div style={{ flex: 1, background: `linear-gradient(160deg, ${C.navy}, ${C.royalLight})`, color: "#fff", padding: "48px 40px", display: "flex", flexDirection: "column", justifyContent: "space-between", minWidth: 280 }}>
+    <div className="login-shell" style={{ minHeight: "100vh", background: `linear-gradient(160deg, ${C.navyDeep}, ${C.royal})`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Segoe UI', system-ui, sans-serif", padding: 16, overflowY: "auto" }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .login-shell { align-items: flex-start !important; padding: 12px !important; }
+          .login-card { flex-direction: column !important; margin: 16px 0 !important; }
+          .login-info, .login-form-panel { width: 100% !important; min-width: 0 !important; padding: 28px 22px !important; }
+        }
+      `}</style>
+      <div className="login-card" style={{ width: "100%", maxWidth: 900, display: "flex", borderRadius: 20, overflow: "hidden", boxShadow: "0 30px 80px rgba(0,0,0,0.35)" }}>
+        <div className="login-info" style={{ flex: 1, background: `linear-gradient(160deg, ${C.navy}, ${C.royalLight})`, color: "#fff", padding: "48px 40px", display: "flex", flexDirection: "column", justifyContent: "space-between", minWidth: 280 }}>
           <div>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
               <Icon name="layers" size={22} color="#fff" />
@@ -962,7 +978,7 @@ function Login({ onLogin, users }) {
           </div>
           <div style={{ fontSize: 11.5, opacity: 0.65, marginTop: 30 }}>Uso exclusivo del equipo interno</div>
         </div>
-        <div style={{ flex: 1, background: "#fff", padding: "48px 40px", minWidth: 300 }}>
+        <div className="login-form-panel" style={{ flex: 1, background: "#fff", padding: "48px 40px", minWidth: 300 }}>
           <div style={{ fontSize: 19, fontWeight: 800, color: C.navy, marginBottom: 4 }}>Iniciar sesión</div>
           <div style={{ fontSize: 12.5, color: C.slate, marginBottom: 24 }}>Ingresa con tu cuenta de auditor, administrador o responsable.</div>
           <form onSubmit={submit}>
@@ -994,7 +1010,7 @@ function Login({ onLogin, users }) {
 /* ============================================================
    LAYOUT / NAV
    ============================================================ */
-function Sidebar({ view, setView, user, onLogout, config }) {
+function Sidebar({ view, setView, user, onLogout, config, mobileOpen, onCloseMobile }) {
   const isResp = user.role === "Responsable";
   const items = isResp
     ? [{ id: "acciones", label: "Mis acciones", icon: "flag" }]
@@ -1011,12 +1027,17 @@ function Sidebar({ view, setView, user, onLogout, config }) {
         puede(user, "verConfig") && { id: "config", label: "Configuración", icon: "settings" },
       ].filter(Boolean);
   return (
-    <div className="app-sidebar" style={{ width: 234, background: C.navyDeep, color: "#fff", display: "flex", flexDirection: "column", flexShrink: 0, minHeight: "100vh" }}>
+    <div className={"app-sidebar" + (mobileOpen ? " mobile-open" : "")} style={{ width: 234, background: C.navyDeep, color: "#fff", display: "flex", flexDirection: "column", flexShrink: 0, minHeight: "100vh" }}>
       <div style={{ padding: "22px 20px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <div style={{ width: 34, height: 34, borderRadius: 9, background: C.royalLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <Icon name="building" size={17} color="#fff" />
         </div>
-        <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>{config?.empresa || "Auditoría Integral"}</div>
+        <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2, flex: 1 }}>{config?.empresa || "Auditoría Integral"}</div>
+        {onCloseMobile && (
+          <button className="sidebar-close-btn" onClick={onCloseMobile} aria-label="Cerrar menú" style={{ display: "none", background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 7, width: 30, height: 30, alignItems: "center", justifyContent: "center", color: "#fff", cursor: "pointer", flexShrink: 0 }}>
+            <Icon name="x" size={15} />
+          </button>
+        )}
       </div>
       <div className="app-sidebar-nav" style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", gap: 3 }}>
         {items.map((it) => (
@@ -1201,6 +1222,53 @@ function MultiSelectSucursales({ sucursales, value, onChange }) {
             <label key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", fontSize: 12.5, color: C.ink, cursor: "pointer", borderRadius: 6 }}>
               <input type="checkbox" checked={value.includes(s.nombre)} onChange={() => toggle(s.nombre)} />
               {s.nombre}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Selector de múltiples responsables (usuarios) para Acciones — chips/etiquetas + checkboxes,
+   mismo patrón que MultiSelectSucursales. El valor es un arreglo de nombres (string[]). */
+function MultiSelectUsuarios({ users, value, onChange, placeholder = "Selecciona responsable(s)…" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+  const toggle = (nombre) => onChange(value.includes(nombre) ? value.filter((v) => v !== nombre) : [...value, nombre]);
+  return (
+    <div style={{ position: "relative" }} ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)} style={{ ...inputStyle, textAlign: "left", cursor: "pointer", minHeight: 40, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        {value.length === 0 ? (
+          <span style={{ color: C.slate }}>{placeholder}</span>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+            {value.map((v) => (
+              <span key={v} style={{ background: C.sky, color: C.navy, border: `1px solid ${C.line}`, borderRadius: 999, padding: "2px 8px", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                {v}
+                <span
+                  onClick={(e) => { e.stopPropagation(); toggle(v); }}
+                  title="Quitar"
+                  style={{ cursor: "pointer", fontWeight: 800, lineHeight: 1 }}
+                >✕</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <Icon name="chevronDown" size={14} color={C.slate} />
+      </button>
+      {open && (
+        <div style={{ position: "absolute", zIndex: 50, top: "calc(100% + 4px)", left: 0, minWidth: 240, background: "#fff", border: `1px solid ${C.line}`, borderRadius: 10, boxShadow: "0 10px 30px rgba(11,23,64,0.18)", padding: 8, maxHeight: 240, overflow: "auto" }}>
+          {value.length > 0 && <button type="button" onClick={() => onChange([])} style={{ display: "block", width: "100%", textAlign: "left", background: "transparent", border: "none", color: C.royal, fontSize: 11.5, fontWeight: 700, padding: "4px 6px", cursor: "pointer" }}>Limpiar selección</button>}
+          {users.map((u) => (
+            <label key={u.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 6px", fontSize: 12.5, color: C.ink, cursor: "pointer", borderRadius: 6 }}>
+              <input type="checkbox" checked={value.includes(u.name)} onChange={() => toggle(u.name)} />
+              {u.name}
             </label>
           ))}
         </div>
@@ -1670,7 +1738,13 @@ function Dashboard({ index, acciones, activos, tiposAuditoria, sucursales, confi
       });
       return Object.entries(map).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 8);
     };
-    const porResponsable = byKey((a) => a.asignadoA);
+    const porResponsableMap = {};
+    acciones.forEach((a) => {
+      const lista = asignadosDe(a);
+      if (lista.length === 0) { porResponsableMap["Sin asignar"] = (porResponsableMap["Sin asignar"] || 0) + 1; return; }
+      lista.forEach((nombre) => { porResponsableMap[nombre] = (porResponsableMap[nombre] || 0) + 1; });
+    });
+    const porResponsable = Object.entries(porResponsableMap).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value).slice(0, 8);
     const porLugar = byKey((a) => a.lugar);
     const porTipoAuditoria = byKey((a) => (tiposAuditoria.find((t) => t.id === a.tipoAuditoriaId)?.nombre) || (a.origen === "Independiente" ? "Independiente" : "—"));
     const porActivo = byKey((a) => (activos.find((x) => x.id === a.activoId)?.nombre) || null).filter((d) => d.label !== "Sin asignar");
@@ -2099,7 +2173,7 @@ function AccionFormModal({ initial, sucursales, users, activos, user, origenFijo
   const [form, setForm] = useState(() => ({
     titulo: initial?.titulo || "",
     descripcion: initial?.descripcion || "",
-    asignadoA: initial?.asignadoA || "",
+    asignadosA: initial?.asignadosA && initial.asignadosA.length ? initial.asignadosA : (initial?.asignadoA ? [initial.asignadoA] : []),
     lugar: initial?.lugar || "",
     activoId: initial?.activoId || "",
     prioridad: initial?.prioridad || "Media",
@@ -2107,13 +2181,14 @@ function AccionFormModal({ initial, sucursales, users, activos, user, origenFijo
     evidencias: initial?.evidencias || [],
   }));
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const valido = form.titulo && form.descripcion && form.asignadoA && form.lugar && form.fechaCompromiso && form.prioridad;
+  const valido = form.titulo && form.descripcion && form.asignadosA.length > 0 && form.lugar && form.fechaCompromiso && form.prioridad;
 
   const submit = () => {
     if (!valido) return;
     const activo = activos.find((a) => a.id === form.activoId);
     onSave({
       ...form,
+      asignadoA: form.asignadosA[0] || "", // se conserva por compatibilidad con datos/lectores antiguos
       activoNombre: activo ? activo.nombre : "",
       origen: origenFijo || "Independiente",
     });
@@ -2125,9 +2200,8 @@ function AccionFormModal({ initial, sucursales, users, activos, user, origenFijo
       <Field label="Título" required><Input value={form.titulo} onChange={(e) => set("titulo", e.target.value)} placeholder="Resumen breve del hallazgo o pendiente" /></Field>
       <Field label="Descripción detallada" required><TextArea rows={3} value={form.descripcion} onChange={(e) => set("descripcion", e.target.value)} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-        <Field label="Responsable (asignado a)" required>
-          <Input list="acc-users" value={form.asignadoA} onChange={(e) => set("asignadoA", e.target.value)} placeholder="Nombre del responsable" />
-          <datalist id="acc-users">{users.map((u) => <option key={u.id} value={u.name} />)}</datalist>
+        <Field label="Responsable(s) asignado(s)" required hint="Puedes asignar a más de una persona.">
+          <MultiSelectUsuarios users={users} value={form.asignadosA} onChange={(v) => set("asignadosA", v)} />
         </Field>
         <Field label="Prioridad" required>
           <Select value={form.prioridad} onChange={(e) => set("prioridad", e.target.value)}>
@@ -2163,7 +2237,7 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
   const canClose = puede(user, "cerrarAccion");
   const canEditFull = puede(user, "editarAccion");
   const canDelete = puede(user, "eliminarAccion");
-  const misma = !isResp || accion.asignadoA === user.name;
+  const misma = !isResp || asignadosDe(accion).includes(user.name);
 
   const [comentario, setComentario] = useState("");
   const [local, setLocal] = useState(accion);
@@ -2200,7 +2274,7 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, fontSize: 12.5, marginBottom: 14 }}>
-        <div><b>Responsable:</b> {local.asignadoA}</div>
+        <div><b>Responsable{asignadosDe(local).length > 1 ? "s" : ""}:</b> {asignadosDe(local).join(", ") || "—"}</div>
         <div><b>Lugar:</b> {local.lugar}</div>
         <div><b>Fecha compromiso:</b> {local.fechaCompromiso}</div>
         <div><b>Activo relacionado:</b> {local.activoNombre || "—"}</div>
@@ -2275,14 +2349,14 @@ function AccionesScreen({ acciones, sucursales, users, activos, tiposAuditoria, 
   const [fFecha, setFFecha] = useState("");
   const [fActivo, setFActivo] = useState("");
 
-  const visibles = isResp ? acciones.filter((a) => a.asignadoA === user.name) : acciones;
+  const visibles = isResp ? acciones.filter((a) => asignadosDe(a).includes(user.name)) : acciones;
 
-  const responsables = [...new Set(acciones.map((a) => a.asignadoA).filter(Boolean))];
+  const responsables = [...new Set(acciones.flatMap((a) => asignadosDe(a)))];
 
   const filtered = visibles.filter((a) => {
     if (fEstado && a.estado !== fEstado) return false;
     if (fPrioridad && a.prioridad !== fPrioridad) return false;
-    if (fResponsable && a.asignadoA !== fResponsable) return false;
+    if (fResponsable && !asignadosDe(a).includes(fResponsable)) return false;
     if (fLugar && a.lugar !== fLugar) return false;
     if (fFecha && a.fechaCompromiso !== fFecha) return false;
     if (fActivo && a.activoId !== fActivo) return false;
@@ -2371,7 +2445,7 @@ function AccionesScreen({ acciones, sucursales, users, activos, tiposAuditoria, 
                   return (
                     <tr key={a.id} style={{ borderTop: `1px solid ${C.line}`, cursor: "pointer", ...rowStyle(a) }} onClick={() => setDetail(a)}>
                       <td style={{ ...td, fontWeight: 700, maxWidth: 220 }}>{a.titulo}</td>
-                      <td style={td}>{a.asignadoA}</td>
+                      <td style={td}>{asignadosDe(a).join(", ") || "—"}</td>
                       <td style={td}>{a.lugar}</td>
                       <td style={td}>{a.activoNombre || "—"}</td>
                       <td style={td}><PrioridadPill prioridad={a.prioridad} /></td>
@@ -2509,7 +2583,7 @@ function ActivosScreen({ activos, sucursales, acciones, user, onSave, onDelete }
                       <b style={{ fontSize: 13 }}>{a.titulo}</b>
                       <EstadoAccionPill estado={a.estado} />
                     </div>
-                    <div style={{ fontSize: 11.5, color: C.slate }}>{a.origen}{a.folioAuditoria ? ` · ${a.folioAuditoria}` : ""} · Compromiso: {a.fechaCompromiso} · Responsable: {a.asignadoA}</div>
+                    <div style={{ fontSize: 11.5, color: C.slate }}>{a.origen}{a.folioAuditoria ? ` · ${a.folioAuditoria}` : ""} · Compromiso: {a.fechaCompromiso} · Responsable(s): {asignadosDe(a).join(", ") || "—"}</div>
                   </div>
                 ))}
               </div>
@@ -2849,12 +2923,27 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
             </Field>
             <Field label="Fecha" required><DateField value={audit.fecha} disabled={readOnly} onChange={(v) => setField("fecha", v)} /></Field>
             <Field label="Sucursal / lugar" required>
-              <Select value={audit.sucursal} disabled={readOnly} onChange={(e) => setField("sucursal", e.target.value)}>
+              <Select
+                value={audit.sucursal}
+                disabled={readOnly}
+                onChange={(e) => {
+                  const nombreSel = e.target.value;
+                  setField("sucursal", nombreSel);
+                  // Autocompleta el encargado con el "responsable" configurado en el catálogo de sucursales.
+                  const sucSel = sucursales.find((s) => s.nombre === nombreSel);
+                  if (sucSel && sucSel.responsable) {
+                    setField("responsable", sucSel.responsable);
+                    setField("encargadoNombre", sucSel.responsable);
+                  }
+                }}
+              >
                 <option value="">Selecciona…</option>
                 {sucursales.map((s) => <option key={s.id} value={s.nombre}>{s.nombre}</option>)}
               </Select>
             </Field>
-            <Field label="Responsable / encargado" required><Input value={audit.responsable} disabled={readOnly} onChange={(e) => setField("responsable", e.target.value)} placeholder="Nombre del encargado de sucursal" /></Field>
+            <Field label="Responsable / encargado" required hint="Se autocompleta al elegir la sucursal; puedes editarlo si es necesario.">
+              <Input value={audit.responsable} disabled={readOnly} onChange={(e) => setField("responsable", e.target.value)} placeholder="Nombre del encargado de sucursal" />
+            </Field>
             <Field label="Auditor" required><Input value={audit.auditor} disabled={readOnly} onChange={(e) => { setField("auditor", e.target.value); setField("auditorNombre", e.target.value); }} /></Field>
             <Field label="Estatus"><Select value={audit.estatus} disabled><option>{audit.estatus}</option></Select></Field>
           </div>
@@ -3069,7 +3158,7 @@ function Wizard({ initialAudit, tipos, sucursales, users, activos, user, onSaveD
           initial={{
             titulo: accionDraft.criterioName,
             descripcion: audit.scores[accionDraft.critId]?.observacion || audit.scores[accionDraft.critId]?.accion || "",
-            asignadoA: audit.responsable || "",
+            asignadosA: audit.responsable ? [audit.responsable] : [],
             lugar: audit.sucursal || "",
             fechaCompromiso: audit.scores[accionDraft.critId]?.fechaCompromiso || "",
             evidencias: audit.scores[accionDraft.critId]?.evidencias || [],
@@ -3274,6 +3363,7 @@ export default function App() {
   const [wizardState, setWizardState] = useState(null); // {audit, mode:'new'|'edit'|'view'}
   const [printAudit, setPrintAudit] = useState(null);
   const [reporteAudit, setReporteAudit] = useState(null); // auditoría abierta en el visor embebido (Punto 7)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false); // menú hamburguesa (celular)
 
   useEffect(() => {
     (async () => {
@@ -3533,11 +3623,26 @@ if (savedSession) {
         * { box-sizing: border-box; }
         table { font-family: inherit; }
 
-        /* ---- Responsividad móvil (Sidebar + Content) ---- */
+        /* ---- Responsividad móvil (Sidebar + Content + menú hamburguesa) ---- */
+        .mobile-topbar { display: none; }
         @media (max-width: 860px) {
           .app-shell { flex-direction: column !important; }
-          .app-sidebar { width: 100% !important; min-height: auto !important; }
-          .app-sidebar-nav { flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important; }
+          .mobile-topbar { display: flex !important; }
+          .sidebar-close-btn { display: flex !important; }
+          .app-sidebar {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important;
+            width: 260px !important;
+            max-width: 82vw !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            z-index: 500;
+            transform: translateX(-100%);
+            transition: transform .25s ease;
+            box-shadow: 8px 0 24px rgba(0,0,0,0.3);
+          }
+          .app-sidebar.mobile-open { transform: translateX(0) !important; }
+          .app-sidebar-nav { flex-direction: column !important; flex-wrap: nowrap !important; overflow-y: auto !important; }
           .app-content { width: 100% !important; padding: 16px !important; }
         }
         @media (max-width: 480px) {
@@ -3546,8 +3651,28 @@ if (savedSession) {
       `}</style>
 
       <div className="no-print" style={{ display: printAudit ? "none" : "flex" }}>
-        <Sidebar view={view} setView={(v) => { setView(v); setWizardState(null); }} user={user} onLogout={logout} config={config} />
+        {mobileNavOpen && (
+          <div className="mobile-nav-backdrop" onClick={() => setMobileNavOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.45)", zIndex: 490 }} />
+        )}
+        <Sidebar
+          view={view}
+          setView={(v) => { setView(v); setWizardState(null); setMobileNavOpen(false); }}
+          user={user}
+          onLogout={() => { logout(); setMobileNavOpen(false); }}
+          config={config}
+          mobileOpen={mobileNavOpen}
+          onCloseMobile={() => setMobileNavOpen(false)}
+        />
       </div>
+
+      {!printAudit && (
+        <div className="no-print mobile-topbar" style={{ alignItems: "center", gap: 10, padding: "12px 16px", background: C.navyDeep, color: "#fff" }}>
+          <button onClick={() => setMobileNavOpen(true)} aria-label="Abrir menú" style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 8, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", cursor: "pointer", flexShrink: 0 }}>
+            <Icon name="menu" size={20} />
+          </button>
+          <div style={{ fontWeight: 800, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{config?.empresa || "Auditoría Integral"}</div>
+        </div>
+      )}
 
       <div className="app-content" style={{ flex: 1, padding: "26px 30px", display: printAudit ? "none" : "block", minWidth: 0 }}>
         {view === "dashboard" && puede(user, "verDashboard") && <Dashboard index={index} acciones={acciones} activos={activos} tiposAuditoria={tiposAuditoria} sucursales={sucursales} config={config} setView={setView} startNueva={startNueva} user={user} ajustesInventario={ajustesInventario} onRegistrarAjuste={registrarAjusteInventario} />}
