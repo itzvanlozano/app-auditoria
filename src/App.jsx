@@ -851,7 +851,7 @@ function SignaturePad({ value, onChange, height = 150 }) {
 
 /* ---------- Selector de fotos genérico (para Activos y Acciones) ---------- */
 function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
-  const [previewIdx, setPreviewIdx] = useState(null); // índice de la foto abierta en la vista previa ampliada (no la URL, para poder borrarla desde ahí)
+  const [previewIdx, setPreviewIdx] = useState(null); // índice de la foto abierta en la vista de sólo-lectura a pantalla completa
   const add = async (files) => {
     const arr = Array.from(files).slice(0, max - (photos || []).length);
     const urls = [];
@@ -865,23 +865,33 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
   const remove = (i) => onChange((photos || []).filter((_, idx) => idx !== i));
   const previewSrc = previewIdx != null ? (photos || [])[previewIdx] : null;
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-start" }}>
       {(photos || []).map((ev, i) => (
-        <div key={i} style={{ position: "relative" }}>
-          <img
-            src={ev}
-            alt=""
-            onClick={() => setPreviewIdx(i)}
-            title="Ver foto ampliada"
-            style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}`, cursor: "zoom-in" }}
-          />
-          {!disabled && (
-            <button
-              onClick={(e) => { e.stopPropagation(); remove(i); }}
-              title="Eliminar foto"
-              style={{ position: "absolute", top: -6, right: -6, background: "#C22B2B", border: "2px solid #fff", color: "#fff", borderRadius: 999, width: 18, height: 18, fontSize: 10, lineHeight: 1, cursor: "pointer" }}
-            >✕</button>
-          )}
+        // La miniatura ya NO tiene onClick propio: ni abre ni borra nada por sí sola.
+        // Sólo dos controles explícitos actúan sobre ella: "Ver" (abre el visor) y "✕" (borra).
+        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+          <div style={{ position: "relative" }}>
+            <img
+              src={ev}
+              alt=""
+              style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: `1px solid ${C.line}`, display: "block" }}
+            />
+            {!disabled && (
+              <button
+                onClick={(e) => { e.stopPropagation(); remove(i); }}
+                title="Eliminar foto"
+                style={{ position: "absolute", top: -6, right: -6, background: "#C22B2B", border: "2px solid #fff", color: "#fff", borderRadius: 999, width: 18, height: 18, fontSize: 10, lineHeight: 1, cursor: "pointer" }}
+              >✕</button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setPreviewIdx(i); }}
+            title="Ver imagen ampliada"
+            style={{ display: "flex", alignItems: "center", gap: 4, border: "none", background: C.sky, color: C.royal, borderRadius: 6, padding: "3px 8px", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}
+          >
+            <Icon name="eye" size={12} /> Ver
+          </button>
         </div>
       ))}
       {!disabled && (photos || []).length < max && (
@@ -891,46 +901,29 @@ function PhotoPicker({ photos, onChange, max = 4, size = 64, disabled }) {
         </label>
       )}
       {previewSrc && (
-        // Fondo del visor: un clic aquí SOLO cierra (no borra nada). El panel interior detiene la
-        // propagación del clic para que ningún control de dentro (cerrar, conservar, eliminar)
-        // pueda "burbujear" y disparar acciones de otros componentes por accidente.
+        // Visor de SOLO LECTURA: un clic en el fondo o en "Cerrar" únicamente oculta la vista
+        // ampliada. Aquí no existe ningún control de borrado — eliminar sólo es posible desde
+        // la "✕" de la miniatura, nunca desde este modal.
         <div
           onClick={() => setPreviewIdx(null)}
-          style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.88)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(11,23,64,0.9)", zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "94vw" }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "94vw" }}
           >
-            <button
-              onClick={(e) => { e.stopPropagation(); setPreviewIdx(null); }}
-              title="Cerrar (conserva la foto)"
-              style={{ position: "absolute", top: -16, right: -16, background: C.navy, border: "2px solid #fff", borderRadius: 999, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", cursor: "pointer", zIndex: 1 }}
-            >
-              <Icon name="x" size={16} />
-            </button>
             <img
               src={previewSrc}
               alt=""
-              onClick={(e) => e.stopPropagation()}
-              style={{ maxWidth: "94vw", maxHeight: "74vh", borderRadius: 10, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", display: "block", cursor: "default" }}
+              style={{ maxWidth: "94vw", maxHeight: "78vh", borderRadius: 10, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", display: "block" }}
             />
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 16 }}>
-              <Btn
-                variant="subtle"
-                onClick={(e) => { e.stopPropagation(); setPreviewIdx(null); }}
-              >
-                <Icon name="check" size={14} /> Aceptar / Conservar foto
-              </Btn>
-              {!disabled && (
-                <Btn
-                  variant="danger"
-                  onClick={(e) => { e.stopPropagation(); remove(previewIdx); setPreviewIdx(null); }}
-                >
-                  <Icon name="trash" size={14} /> Eliminar foto
-                </Btn>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setPreviewIdx(null); }}
+              style={{ marginTop: 18, background: "#fff", color: C.navy, border: "none", borderRadius: 10, padding: "13px 40px", fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.3)" }}
+            >
+              Cerrar
+            </button>
           </div>
         </div>
       )}
@@ -2297,6 +2290,7 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
 
   const [comentario, setComentario] = useState("");
   const [local, setLocal] = useState(accion);
+  const [evidenciasDirty, setEvidenciasDirty] = useState(false); // true mientras haya fotos sin confirmar con "Guardar evidencias"
 
   const registrar = (evento) => ({ fecha: new Date().toISOString(), usuario: user.name, evento });
 
@@ -2314,7 +2308,17 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
     onSave(next);
     setComentario("");
   };
-  const agregarEvidencias = (fotos) => persist({ evidencias: fotos }, "Evidencia agregada");
+  // Las fotos que se agregan/quitan aquí sólo actualizan el estado local del modal — NO se
+  // envían al estado global ni a Supabase hasta que el usuario presione "Guardar evidencias".
+  // Así, subir una foto y cerrar el modal por accidente no altera nada ya persistido.
+  const actualizarEvidenciasLocal = (fotos) => {
+    setLocal((prev) => ({ ...prev, evidencias: fotos }));
+    setEvidenciasDirty(true);
+  };
+  const guardarEvidencias = () => {
+    persist({ evidencias: local.evidencias }, "Evidencias actualizadas");
+    setEvidenciasDirty(false);
+  };
 
   const tiempo = accionEstadoTiempo(local);
   const dias = diasRestantes(local.fechaCompromiso);
@@ -2339,7 +2343,15 @@ function AccionDetailModal({ accion, sucursales, users, activos, user, onSave, o
       </div>
       <div style={{ fontSize: 13, color: C.ink, background: C.sky, borderRadius: 10, padding: 12, marginBottom: 14 }}>{local.descripcion}</div>
 
-      <Field label="Evidencias fotográficas"><PhotoPicker photos={local.evidencias} onChange={agregarEvidencias} disabled={!canEditFull} /></Field>
+      <Field label="Evidencias fotográficas">
+        <PhotoPicker photos={local.evidencias} onChange={actualizarEvidenciasLocal} disabled={!canEditFull} />
+        {canEditFull && evidenciasDirty && (
+          <div style={{ marginTop: 8 }}>
+            <Btn size="sm" onClick={guardarEvidencias}><Icon name="check" size={13} /> Guardar evidencias</Btn>
+            <span style={{ marginLeft: 8, fontSize: 11, color: "#9A6A00" }}>Tienes cambios en las fotos sin guardar.</span>
+          </div>
+        )}
+      </Field>
 
       {canEditFull && (
         <Field label="Cambiar estado">
